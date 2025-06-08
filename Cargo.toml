@@ -1,0 +1,12 @@
+[package]
+name = "ktorrent-rs"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tokio = { version = "1.0", features = ["rt", "rt-multi-thread", "macros"] }
+zbus = "5.7"
+zbus_xml = "5.0"
+quick-xml = "0.36"
+serde = "1"
+serde_bencode = "0.2"
