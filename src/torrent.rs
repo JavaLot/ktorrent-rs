@@ -20,6 +20,8 @@
 //! [Writing a client proxy]: https://dbus2.github.io/zbus/client.html
 //! [D-Bus standard interfaces]: https://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces,
 
+use std::fmt::{Display, Formatter};
+use byte_unit::{Byte, UnitType};
 use zbus::export::serde::{Deserialize, Serialize};
 use zbus::{Connection, Result, proxy};
 
@@ -271,7 +273,39 @@ pub trait Torrent {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
-pub struct TorrentStat {
+pub struct TorrentStats {
+    pub running: i8,
     pub session_bytes_downloaded: u64,
     pub session_bytes_uploaded: u64,
+    pub started: i8,
+    pub stopped_by_error: i8,
+}
+
+#[derive(Debug)]
+pub struct UpDownStats {
+    pub uploaded: u64,
+    pub downloaded: u64,
+}
+
+impl UpDownStats {
+    pub fn new() -> UpDownStats {
+        UpDownStats { uploaded: 0, downloaded: 0 }
+    }
+
+    pub fn from_torrent_stats(stats: &TorrentStats) -> UpDownStats {
+        UpDownStats { uploaded: stats.session_bytes_uploaded, downloaded: stats.session_bytes_downloaded }
+    }
+
+    pub fn update(&mut self, stat: &TorrentStats) {
+        self.uploaded += stat.session_bytes_uploaded;
+        self.downloaded += stat.session_bytes_downloaded;
+    }
+}
+
+impl Display for UpDownStats {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "up: {}, dw: {}",
+        Byte::from_u64(self.uploaded).get_appropriate_unit(UnitType::Binary),
+        Byte::from_u64(self.downloaded).get_appropriate_unit(UnitType::Binary))
+    }
 }
