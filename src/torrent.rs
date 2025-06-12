@@ -20,8 +20,9 @@
 //! [Writing a client proxy]: https://dbus2.github.io/zbus/client.html
 //! [D-Bus standard interfaces]: https://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces,
 
-use std::fmt::{Display, Formatter};
 use byte_unit::{Byte, UnitType};
+use std::fmt::{Display, Formatter};
+use termion::{color, style};
 use zbus::export::serde::{Deserialize, Serialize};
 use zbus::{Connection, Result, proxy};
 
@@ -274,6 +275,7 @@ pub trait Torrent {
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct TorrentStats {
+    pub status: String,
     pub running: i8,
     pub session_bytes_downloaded: u64,
     pub session_bytes_uploaded: u64,
@@ -289,11 +291,17 @@ pub struct UpDownStats {
 
 impl UpDownStats {
     pub fn new() -> UpDownStats {
-        UpDownStats { uploaded: 0, downloaded: 0 }
+        UpDownStats {
+            uploaded: 0,
+            downloaded: 0,
+        }
     }
 
     pub fn from_torrent_stats(stats: &TorrentStats) -> UpDownStats {
-        UpDownStats { uploaded: stats.session_bytes_uploaded, downloaded: stats.session_bytes_downloaded }
+        UpDownStats {
+            uploaded: stats.session_bytes_uploaded,
+            downloaded: stats.session_bytes_downloaded,
+        }
     }
 
     pub fn update(&mut self, stat: &TorrentStats) {
@@ -302,10 +310,37 @@ impl UpDownStats {
     }
 }
 
+impl Default for UpDownStats {
+    fn default() -> UpDownStats {
+        UpDownStats::new()
+    }
+}
+
 impl Display for UpDownStats {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "up: {}, dw: {}",
-        Byte::from_u64(self.uploaded).get_appropriate_unit(UnitType::Binary),
-        Byte::from_u64(self.downloaded).get_appropriate_unit(UnitType::Binary))
+        if self.uploaded > 0 {
+            write!(
+                f,
+                "{}{}⭡ {:.3} {}",
+                style::Bold,
+                color::Fg(color::Green),
+                Byte::from_u64(self.uploaded)
+                    .get_appropriate_unit(UnitType::Binary)
+                    .get_value(),
+                style::Reset
+            )?;
+        }
+        if self.downloaded > 0 {
+            write!(
+                f,
+                "{}⭣ {:.3} {}",
+                color::Fg(color::Red),
+                Byte::from_u64(self.downloaded)
+                    .get_appropriate_unit(UnitType::Binary)
+                    .get_value(),
+                style::Reset
+            )?;
+        }
+        write!(f, "")
     }
 }
