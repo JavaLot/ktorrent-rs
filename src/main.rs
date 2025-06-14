@@ -1,6 +1,6 @@
 use ktorrent_rs::KTorrent;
 use ktorrent_rs::torrent::{TorrentStats, UpDownStats};
-use std::collections::HashSet;
+use std::collections::HashMap;
 use std::time::Instant;
 use termion::style;
 
@@ -20,14 +20,18 @@ async fn main() {
     let ts = kt.list_torrent_names().await.unwrap();
 
     let mut active: usize = 0;
-    let mut statuses: HashSet<String> = HashSet::new();
+    let mut statuses: HashMap<String, usize> = HashMap::new();
     let mut stats = UpDownStats::new();
     for t in &ts {
         let tp = kt.get_torrent_proxy(t.as_str()).await.unwrap();
         let n = tp.name().await.unwrap();
         let s = tp.stats().await.unwrap();
         let st: TorrentStats = serde_bencode::from_bytes(&s).unwrap();
-        statuses.insert(st.status.clone());
+        if let Some(c) = statuses.get_mut(&st.status) {
+            *c += 1;
+        } else {
+            statuses.insert(st.status.clone(), 1);
+        }
 
         if st.session_bytes_downloaded > 0 || st.session_bytes_uploaded > 0 {
             active += 1;

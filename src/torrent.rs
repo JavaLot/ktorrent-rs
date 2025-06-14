@@ -324,8 +324,7 @@ impl Display for UpDownStats {
                 "{}{}⭡ {:.3} {}",
                 style::Bold,
                 color::Fg(color::Green),
-                Byte::from_u64(self.uploaded)
-                    .get_appropriate_unit(UnitType::Binary),
+                Byte::from_u64(self.uploaded).get_appropriate_unit(UnitType::Binary),
                 style::Reset
             )?;
         }
@@ -334,8 +333,7 @@ impl Display for UpDownStats {
                 f,
                 "{}⭣ {:.3} {}",
                 color::Fg(color::Red),
-                Byte::from_u64(self.downloaded)
-                    .get_appropriate_unit(UnitType::Binary),
+                Byte::from_u64(self.downloaded).get_appropriate_unit(UnitType::Binary),
                 style::Reset
             )?;
         }
