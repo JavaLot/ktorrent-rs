@@ -1,8 +1,10 @@
+use jiff::Timestamp;
+use jiff::tz::TimeZone;
 use ktorrent_rs::KTorrent;
 use ktorrent_rs::torrent::{TorrentStats, UpDownStats};
 use std::collections::HashMap;
 use std::time::Instant;
-use termion::style;
+use termion::{color, style};
 
 #[tokio::main]
 async fn main() {
@@ -49,7 +51,17 @@ async fn main() {
             println!("{t} - {n}, Stopped by error");
         }
     }
-    println!("torrents: {}, was active: {active}", ts.len());
+    let dt = Timestamp::now().to_zoned(TimeZone::system()).datetime();
+    println!(
+        "{}{}{}{} - torrents: {}, was active: {}{active}{}",
+        style::Bold,
+        color::Fg(color::Yellow),
+        dt.strftime("%F %T"),
+        style::Reset,
+        ts.len(),
+        style::Bold,
+        style::Reset,
+    );
 
     println!("{stats}");
     println!("{statuses:?}");
