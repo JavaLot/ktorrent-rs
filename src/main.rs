@@ -63,7 +63,9 @@ async fn main() {
         style::Reset,
     );
 
-    println!("{stats}");
+    if stats.was_active() {
+        println!("{stats}");
+    }
     println!("{statuses:?}");
     println!("{:?}", start.elapsed());
 }

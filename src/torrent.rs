@@ -308,6 +308,10 @@ impl UpDownStats {
         self.uploaded += stat.session_bytes_uploaded;
         self.downloaded += stat.session_bytes_downloaded;
     }
+
+    pub fn was_active(&self) -> bool {
+        self.uploaded > 0 || self.downloaded > 0
+    }
 }
 
 impl Default for UpDownStats {
