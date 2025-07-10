@@ -1,7 +1,11 @@
+pub mod core;
 pub mod group;
+pub mod settings;
 pub mod torrent;
 
+use crate::core::coreProxy;
 use crate::group::GroupProxy;
+use crate::settings::settingsProxy;
 use crate::torrent::TorrentProxy;
 use quick_xml::de::Deserializer;
 use std::io::{BufReader, Read};
@@ -10,6 +14,7 @@ use zbus::export::serde::Deserialize;
 
 pub const KTORRENT_NAME: &str = "org.kde.ktorrent";
 
+#[derive(Clone)]
 pub struct KTorrent {
     con: Connection,
 }
@@ -93,7 +98,7 @@ impl KTorrent {
     }
 
     pub async fn get_group_proxy(&self, name: &str) -> Result<GroupProxy, KTorrentError> {
-        let path = format!("/group/{}", name);
+        let path = format!("/group/{name}");
         Ok(GroupProxy::builder(&self.con)
             .destination(KTORRENT_NAME)?
             .path(path)?
@@ -102,8 +107,26 @@ impl KTorrent {
     }
 
     pub async fn get_torrent_proxy(&self, name: &str) -> Result<TorrentProxy, KTorrentError> {
-        let path = format!("/torrent/{}", name);
+        let path = format!("/torrent/{name}");
         Ok(TorrentProxy::builder(&self.con)
+            .destination(KTORRENT_NAME)?
+            .path(path)?
+            .build()
+            .await?)
+    }
+
+    pub async fn get_core_proxy(&self) -> Result<coreProxy, KTorrentError> {
+        let path = "/core".to_string();
+        Ok(coreProxy::builder(&self.con)
+            .destination(KTORRENT_NAME)?
+            .path(path)?
+            .build()
+            .await?)
+    }
+
+    pub async fn get_settings_proxy(&self) -> Result<settingsProxy, KTorrentError> {
+        let path = "/settings".to_string();
+        Ok(settingsProxy::builder(&self.con)
             .destination(KTORRENT_NAME)?
             .path(path)?
             .build()
